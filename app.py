@@ -342,3 +342,4 @@ if not st.session_state.auth['logged_in']: show_auth()
 elif st.session_state.auth['role'] == 'student': show_student()
 
 else: show_recruiter()
+
