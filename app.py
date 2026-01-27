@@ -1,8 +1,17 @@
 import streamlit as st
-import requests
 import pandas as pd
 import time
+import tempfile
+import os
 from src.database import register_user, authenticate_user
+from src.resume_loader import extract_resume_text
+from src.jd_processor import clean_job_description
+from src.skill_extractor import extract_skills
+from src.matcher import calculate_match_score
+from src.gap_analysis import find_skill_gap
+from src.mentor import generate_mentor_feedback, generate_missing_skills_guidance, generate_role_guidance
+from src.learning_path import generate_learning_path
+from src.role_recommender import recommend_roles
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(
@@ -79,36 +88,48 @@ if 'results' not in st.session_state:
 if 'active_role' not in st.session_state:
     st.session_state.active_role = None
 
-# --- CONFIGURATION & SECRETS ---
-# 1. Look for API_URL in Streamlit Secrets (for Cloud Deployment)
-# 2. Look for API_URL in OS Environment Variables
-# 3. Fallback to Localhost (for Local Development)
-def get_api_url():
-    if "API_URL" in st.secrets:
-        return st.secrets["API_URL"].rstrip("/")
-    import os
-    return os.getenv("API_URL", "http://127.0.0.1:5000").rstrip("/")
-
-API_URL = get_api_url()
-
-# --- HELPERS ---
-def check_backend():
-    try: return requests.get(f"{API_URL}/", timeout=1.0).status_code == 200
-    except: return False
-
-def call_api(resume_file, jd_text):
+# --- CORE ANALYSIS LOGIC (Standalone) ---
+def process_analysis(resume_file, jd_text):
     try:
-        files = {"resume": ("resume.pdf", resume_file.getvalue(), "application/pdf")}
-        data = {"job_description": jd_text}
-        r = requests.post(f"{API_URL}/analyze", files=files, data=data, timeout=30)
-        if r.status_code == 200:
-            return r.json(), None
-        else:
-            return None, f"Server Error ({r.status_code}): {r.text}"
-    except requests.exceptions.Timeout:
-        return None, "The request timed out. The server might be busy processing the AI models."
+        # Save resume temporarily for processing
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp:
+            temp.write(resume_file.getvalue())
+            resume_path = temp.name
+
+        try:
+            resume_text = extract_resume_text(resume_path)
+        finally:
+            if os.path.exists(resume_path):
+                os.remove(resume_path)
+
+        jd_cleaned = clean_job_description(jd_text)
+        resume_skills = extract_skills(resume_text)
+        jd_skills = extract_skills(jd_cleaned)
+
+        # Match Logic
+        skill_match = round((len(set(resume_skills) & set(jd_skills)) / max(len(jd_skills), 1)) * 100, 2)
+        content_match = int(calculate_match_score(resume_text, jd_cleaned))
+        overall_match = round((skill_match * 0.6) + (content_match * 0.4), 2)
+        
+        missing_skills = find_skill_gap(resume_skills, jd_skills)
+        learning_path = generate_learning_path(missing_skills)
+        recommended_roles = recommend_roles(resume_skills)
+
+        results = {
+            "skill_match": skill_match,
+            "content_match": content_match,
+            "overall_match": overall_match,
+            "resume_skills": resume_skills,
+            "missing_skills": missing_skills,
+            "learning_path": learning_path,
+            "recommended_roles": recommended_roles,
+            "mentor_feedback": generate_mentor_feedback(resume_skills, missing_skills, overall_match),
+            "missing_skills_guidance": generate_missing_skills_guidance(missing_skills),
+            "role_guidance": generate_role_guidance(recommended_roles, has_missing_skills=bool(missing_skills))
+        }
+        return results, None
     except Exception as e:
-        return None, f"Connection Error: {str(e)}"
+        return None, f"Analysis Error: {str(e)}"
 
 # --- UI COMPONENTS ---
 def render_metrics(res):
@@ -172,7 +193,7 @@ def show_student():
         if res_file and jd_text:
             print(f"Inputs detected - Resume size: {len(res_file.getvalue())} bytes")
             with st.spinner("Analyzing profile with AI models..."):
-                results, error = call_api(res_file, jd_text)
+                results, error = process_analysis(res_file, jd_text)
                 if error:
                     print(f"API Error: {error}")
                     st.error(error)
@@ -304,7 +325,7 @@ def show_recruiter():
             ranks = []
             progress = st.progress(0)
             for i, f in enumerate(files):
-                result, error = call_api(f, jd_input)
+                result, error = process_analysis(f, jd_input)
                 if result:
                     ranks.append({
                         "Candidate": f.name,
@@ -344,10 +365,7 @@ def show_recruiter():
             """, unsafe_allow_html=True)
 
 # --- STATUS BAR ---
-if not check_backend():
-    st.error("Backend API Offline. Please ensure 'api.py' is running.")
-else:
-    st.caption("🟢 Server Online | AI Models Loaded")
+st.caption("🟢 All Systems Standalone | AI Models Loaded Locally")
 
 # --- APP FLOW ---
 if not st.session_state.auth['logged_in']: show_auth()
