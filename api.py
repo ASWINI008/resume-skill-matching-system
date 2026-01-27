@@ -1,20 +1,14 @@
 from flask import Flask, request, jsonify
 import tempfile
 import os
-from flask_cors import CORS
 
 from src.resume_loader import extract_resume_text
 from src.jd_processor import clean_job_description
 from src.skill_extractor import extract_skills
 from src.matcher import calculate_match_score
 from src.gap_analysis import find_skill_gap
-from src.learning_path import generate_learning_path
-from src.role_recommender import recommend_roles
-from src.mentor import (
-    generate_mentor_feedback,
-    generate_missing_skills_guidance,
-    generate_role_guidance
-)
+from src.mentor import generate_mentor_feedback, generate_missing_skills_guidance, generate_role_guidance
+from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
@@ -32,7 +26,7 @@ def analyze_resume():
         if resume_file is None or jd_text is None:
             return jsonify({"error": "Missing input"}), 400
 
-        # Save resume temporarily
+        # save resume temporarily
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp:
             resume_path = temp.name
             resume_file.save(resume_path)
@@ -48,42 +42,33 @@ def analyze_resume():
         resume_skills = extract_skills(resume_text)
         jd_skills = extract_skills(jd_cleaned)
 
-        # ---------- Skill Match ----------
+        # ---------------- SKILL MATCH ----------------
         skill_match = round(
             (len(set(resume_skills) & set(jd_skills)) / max(len(jd_skills), 1)) * 100, 2
         )
 
-        # ---------- Content Match ----------
+        # ---------------- CONTENT MATCH ----------------
         content_match = int(calculate_match_score(resume_text, jd_cleaned))
 
-        # ---------- Overall ----------
         overall_match = round(
             (skill_match * 0.6) + (content_match * 0.4), 2
         )
 
-        # ---------- Gap ----------
+        # ---------------- GAP ----------------
         missing_skills = find_skill_gap(resume_skills, jd_skills)
 
-        # ---------- Learning Path ----------
+        # ---------------- LEARNING PATH (simple) ----------------
+        from src.learning_path import generate_learning_path
         learning_path = generate_learning_path(missing_skills)
 
-        # ---------- Role Recommendation ----------
+        # ---------------- ROLE RECOMMENDATION ----------------
+        from src.role_recommender import recommend_roles
         recommended_roles = recommend_roles(resume_skills)
 
-        # ---------- AI Motivation ----------
-        mentor_feedback = generate_mentor_feedback(
-            resume_skills,
-            missing_skills,
-            overall_match
-        )
-
+        # Generate AI guidance messages
         missing_skills_guidance = generate_missing_skills_guidance(missing_skills)
-
-        role_guidance = generate_role_guidance(
-            recommended_roles,
-            has_missing_skills=bool(missing_skills)
-        )
-
+        role_guidance = generate_role_guidance(recommended_roles, has_missing_skills=bool(missing_skills))
+        
         return jsonify({
             "skill_match": skill_match,
             "content_match": content_match,
@@ -92,18 +77,18 @@ def analyze_resume():
             "missing_skills": missing_skills,
             "learning_path": learning_path,
             "recommended_roles": recommended_roles,
-            "mentor_feedback": mentor_feedback,
+            "mentor_feedback": generate_mentor_feedback(resume_skills, missing_skills, overall_match),
             "missing_skills_guidance": missing_skills_guidance,
             "role_guidance": role_guidance
         })
-
     except Exception as e:
         import traceback
-        print("CRITICAL ERROR:", e)
+        print(f"CRITICAL ERROR: {e}")
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True, use_reloader=False)
-
+    # Use the port provided by the cloud service, or default to 5000
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
