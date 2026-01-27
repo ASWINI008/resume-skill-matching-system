@@ -79,16 +79,28 @@ if 'results' not in st.session_state:
 if 'active_role' not in st.session_state:
     st.session_state.active_role = None
 
+# --- CONFIGURATION & SECRETS ---
+# 1. Look for API_URL in Streamlit Secrets (for Cloud Deployment)
+# 2. Look for API_URL in OS Environment Variables
+# 3. Fallback to Localhost (for Local Development)
+def get_api_url():
+    if "API_URL" in st.secrets:
+        return st.secrets["API_URL"].rstrip("/")
+    import os
+    return os.getenv("API_URL", "http://127.0.0.1:5000").rstrip("/")
+
+API_URL = get_api_url()
+
 # --- HELPERS ---
 def check_backend():
-    try: return requests.get("http://127.0.0.1:5000/", timeout=0.5).status_code == 200
+    try: return requests.get(f"{API_URL}/", timeout=1.0).status_code == 200
     except: return False
 
 def call_api(resume_file, jd_text):
     try:
         files = {"resume": ("resume.pdf", resume_file.getvalue(), "application/pdf")}
         data = {"job_description": jd_text}
-        r = requests.post("http://127.0.0.1:5000/analyze", files=files, data=data, timeout=30)
+        r = requests.post(f"{API_URL}/analyze", files=files, data=data, timeout=30)
         if r.status_code == 200:
             return r.json(), None
         else:
