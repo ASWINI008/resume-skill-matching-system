@@ -20,67 +20,86 @@ Manual resume screening is time-consuming and inconsistent. SkillSync Pro solves
 This project includes **separate dashboards for Students and Recruiters**.
 
 ---
+## 🖥️ Application Screenshots
 
-## Application Screenshots
+> 📁 Screenshots are stored inside the `screenshots/` folder.
+
 ---
 
 ### 🔐 Login Page
+<img width="1357" height="562" alt="Screenshot 2026-01-27 134721" src="https://github.com/user-attachments/assets/6f9da723-63da-4020-88e6-df4e4a8ddb6e" />
 
-<img width="1357" height="562" alt="Screenshot 2026-01-27 134721" src="https://github.com/user-attachments/assets/885a20ba-1d79-49ee-bfc3-60939ee8e1df" />
+**Purpose:**  
+Allows users to select Student or Recruiter role and access the system.
 
 ---
 
 ### 📝 Sign Up Page
+<img width="1318" height="561" alt="Screenshot 2026-01-27 134734" src="https://github.com/user-attachments/assets/64e0776c-2d33-4f71-956b-79323dbf92d5" />
 
-<img width="1318" height="561" alt="Screenshot 2026-01-27 134734" src="https://github.com/user-attachments/assets/395f58e2-3b81-4b5c-9c5b-25e7fa599356" />
+**Purpose:**  
+New users can register with role-based access.
 
 ---
 
 ### 🎓 Student Dashboard
+<img width="1361" height="544" alt="Screenshot 2026-01-27 134818" src="https://github.com/user-attachments/assets/9b75bdd3-e08c-4b77-b5d4-9099ef8a53d8" />
 
-<img width="1361" height="544" alt="Screenshot 2026-01-27 134818" src="https://github.com/user-attachments/assets/86b727bd-e926-4726-880d-ad2f207f26b6" />
+**Purpose:**  
+Students analyze resumes and understand career readiness.
 
 ---
 
 ### 📤 Resume Upload & Job Description
+<img width="1296" height="534" alt="Screenshot 2026-01-27 134857" src="https://github.com/user-attachments/assets/4ed9b9bf-7661-4a0f-92ca-48fb8147aff7" />
 
-<img width="1296" height="534" alt="Screenshot 2026-01-27 134857" src="https://github.com/user-attachments/assets/407dd39e-5c7a-45c4-b632-ae112a6462f1" />
+**Purpose:**  
+Simulates real ATS screening process.
 
 ---
 
-### 📊 Analysis Insights and ✅ Matched Skills & ❌ Skills to Acquire
+### 📊 Analysis Insights
+<img width="1353" height="553" alt="Screenshot 2026-01-27 134946" src="https://github.com/user-attachments/assets/6bbbc9f2-466a-480a-a902-a1c96f14fb2a" />
 
-<img width="1353" height="553" alt="Screenshot 2026-01-27 134946" src="https://github.com/user-attachments/assets/52645bfb-51de-41bf-b9a9-f302a8d03eb2" />
+Displays:
+- Skill Match %
+- Content Match %
+- Overall ATS Score
 
 ---
 
 ### 💡 Mentor Message & Motivation
+<img width="1343" height="555" alt="Screenshot 2026-01-27 135011" src="https://github.com/user-attachments/assets/b3b30dd0-7261-40cd-bd02-7a6026534cbd" />
 
-<img width="1343" height="555" alt="Screenshot 2026-01-27 135011" src="https://github.com/user-attachments/assets/1561128a-92d1-4928-8a16-e9d4d8869dd8" />
+Provides encouraging guidance to avoid demotivation.
 
 ---
 
 ### 🧭 Personalized Learning Roadmap
+<img width="1255" height="521" alt="Screenshot 2026-01-27 143424" src="https://github.com/user-attachments/assets/bd875872-df0a-4725-831f-07b2176d69a8" />
 
-<img width="1255" height="521" alt="Screenshot 2026-01-27 143424" src="https://github.com/user-attachments/assets/67cb89eb-fbec-4520-8ad6-eaa401f42e48" />
+Step-by-step learning suggestions for missing skills.
 
 ---
 
 ### 💼 Recommended Career Roles
+<img width="1343" height="513" alt="Screenshot 2026-01-27 135028" src="https://github.com/user-attachments/assets/3b3eabf9-c7ea-49b8-9c69-3dc8979f676f" />
 
-<img width="1343" height="513" alt="Screenshot 2026-01-27 135028" src="https://github.com/user-attachments/assets/72a2424a-049e-45e6-98b1-c94fd110c2e1" />
+Suggests suitable job roles based on current skills.
 
 ---
 
 ### 👨‍💼 Recruiter Dashboard
+<img width="1342" height="546" alt="Screenshot 2026-01-27 135115" src="https://github.com/user-attachments/assets/0b8618bf-509b-4d2c-ac0a-13ca99b0ae1f" />
 
-<img width="1342" height="546" alt="Screenshot 2026-01-27 135115" src="https://github.com/user-attachments/assets/d3720355-424b-4dc4-b584-45da0cac1722" />
+Allows recruiters to upload multiple resumes.
 
 ---
 
-### 📈 Candidate Ranking Table and  Top Performer Identification
+### 📈 Candidate Ranking
+<img width="1342" height="557" alt="Screenshot 2026-01-27 135537" src="https://github.com/user-attachments/assets/9d3a7fdc-7cef-4eeb-b176-6453b4cdc989" />
 
-<img width="1342" height="557" alt="Screenshot 2026-01-27 135537" src="https://github.com/user-attachments/assets/fabb0efa-1a18-4bb6-b231-511342a50b70" />
+Ranks candidates using ATS score.
 
 ---
 
@@ -121,7 +140,62 @@ This project includes **separate dashboards for Students and Recruiters**.
 - Top performer identification
 
 ---
+## System Architecture
 
+```text
++-----------------------------+
+|        User Interface       |
+|     (Student / Recruiter)   |
++--------------+--------------+
+               |
+               v
++-----------------------------+
+|     Streamlit Frontend      |
+|  - Resume Upload (PDF)      |
+|  - Job Description Input   |
+|  - Dashboard View           |
++--------------+--------------+
+               |
+               v
++-----------------------------+
+|        Flask Backend API    |
+|  - /analyze endpoint        |
+|  - Request handling         |
++--------------+--------------+
+               |
+               v
++-----------------------------+
+|       Processing Layer      |
+|  - Resume Text Extraction   |
+|  - JD Cleaning              |
+|  - Skill Extraction         |
++--------------+--------------+
+               |
+               v
++-----------------------------+
+|        Analysis Engine      |
+|  - Skill Match              |
+|  - Content Match            |
+|  - ATS Score                |
++--------------+--------------+
+               |
+               v
++-----------------------------+
+|     Recommendation Layer    |
+|  - Learning Path            |
+|  - Role Recommendation      |
+|  - Mentor Guidance          |
++--------------+--------------+
+               |
+               v
++-----------------------------+
+|        Result Display       |
+|  - Metrics Visualization    |
+|  - Skill Cards              |
+|  - Roadmap View             |
++-----------------------------+
+```
+---
 ## 📊 Evaluation Metrics
 
 | Metric | Description |
@@ -133,25 +207,31 @@ This project includes **separate dashboards for Students and Recruiters**.
 | Role Match | Career suitability |
 
 ---
+## Folder Structure
 
-## System Architecture
+```text
 
-User
+resume-skill-matching-system/
 │
-▼
-Streamlit UI (app.py)
+├── app.py                     # Streamlit frontend
+├── api.py                     # Flask backend API
+├── requirements.txt
+├── README.md
 │
-▼
-Flask API (api.py)
+├── src/
+│   ├── resume_loader.py       # PDF text extraction
+│   ├── jd_processor.py        # Job description cleaning
+│   ├── skill_extractor.py     # Skill identification
+│   ├── matcher.py             # Semantic similarity
+│   ├── gap_analysis.py        # Missing skill detection
+│   ├── learning_path.py       # Learning roadmap generator
+│   └── role_recommender.py    # Job role recommendation
 │
-▼
-NLP Processing Modules
+├── screenshots/               # Application screenshots
 │
-▼
-Analysis & Recommendations
+└── venv/                      # Virtual environment
 
-
----
+```
 
 ## Technologies Used
 
@@ -233,6 +313,16 @@ python api.py
 streamlit run app.py
 ```
 ---
+
+### Live Demo
+
+👉 Application URL:
+https://resume-screening-matching.streamlit.app/
+
+Deployed using Streamlit Cloud.
+
+---
+
 🏁 Project Outcome
 
 SkillSync Pro demonstrates how AI-assisted resume screening can:
